@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+
+<meta charset="UTF-8">
+<title>다꾸 영수증 만들기</title>
+
+
+<style>
+
+*{
+    box-sizing:border-box;
+    font-family:"Courier New", monospace;
+}
+
+
+body{
+
+    background:#f5f5f5;
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    padding:30px;
+
+}
+
+
+
+input{
+
+    padding:8px;
+
+    margin:5px;
+
+    width:130px;
+
+}
+
+
+button{
+
+    padding:8px 12px;
+
+    cursor:pointer;
+
+}
+
+
+
+/* 입력 */
+
+.input-box{
+
+    margin-bottom:20px;
+
+}
+
+
+
+/* 영수증 */
+
+.receipt{
+
+
+    width:320px;
+
+
+    min-height:430px;
+
+
+    background:#fffdf7;
+
+
+    padding:25px;
+
+
+    border:1px dashed #999;
+
+
+    box-shadow:0 0 10px #ccc;
+
+
+}
+
+
+
+.title{
+
+
+    text-align:center;
+
+
+    font-size:28px;
+
+
+    letter-spacing:5px;
+
+
+    margin-bottom:15px;
+
+
+}
+
+
+
+.date{
+
+
+    text-align:center;
+
+    font-size:14px;
+
+    margin-bottom:20px;
+
+}
+
+
+
+/* 항목 */
+
+.item{
+
+
+    display:flex;
+
+
+    justify-content:space-between;
+
+
+    align-items:center;
+
+
+    padding:8px 0;
+
+
+    cursor:grab;
+
+
+}
+
+
+
+.item:active{
+
+    cursor:grabbing;
+
+}
+
+
+.item span:first-child{
+
+    flex:1;
+
+}
+
+
+.item span:nth-child(2){
+
+    text-align:right;
+
+    width:90px;
+
+}
+
+
+.delete{
+
+
+    margin-left:10px;
+
+    padding:3px 7px;
+
+    font-size:12px;
+
+    flex:none;
+
+}
+
+
+
+
+.line{
+
+
+    border-top:1px dashed black;
+
+
+    margin:20px 0;
+
+
+}
+
+
+
+.total{
+
+
+    display:flex;
+
+
+    justify-content:space-between;
+
+
+    font-size:20px;
+
+
+    font-weight:bold;
+
+}
+
+
+
+.save{
+
+
+    margin-top:20px;
+
+}
+
+
+</style>
+
+
+</head>
+
+
+<body>
+
+
+
+<h2>다꾸 영수증 만들기</h2>
+
+
+
+<div class="input-box">
+
+
+<input id="date" type="date">
+
+
+<br>
+
+
+<input id="name" placeholder="품목">
+
+
+<input id="price" type="number" placeholder="가격">
+
+
+<button onclick="addItem()">
+추가
+</button>
+
+
+</div>
+
+
+
+
+<div class="receipt" id="receipt">
+
+
+<div class="title">
+
+영 수 증
+
+</div>
+
+
+
+<div class="date" id="showDate">
+
+</div>
+
+
+
+<div id="list">
+
+
+</div>
+
+
+
+<div class="line"></div>
+
+
+
+<div class="total">
+
+<span>
+합계
+</span>
+
+
+<span id="total">
+
+0원
+
+</span>
+
+
+</div>
+
+
+</div>
+
+
+
+<button class="save" onclick="saveImage()">
+
+이미지 저장
+
+</button>
+
+
+
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+
+
+<script>
+
+
+let total = 0;
+
+
+
+let list =
+document.getElementById("list");
+
+
+
+
+// 날짜 기본값 오늘
+
+let today =
+new Date()
+.toISOString()
+.substring(0,10);
+
+
+document.getElementById("date").value =
+today;
+
+
+updateDate();
+
+
+
+// 날짜 변경
+
+document
+.getElementById("date")
+.addEventListener(
+"change",
+updateDate
+);
+
+
+
+function updateDate(){
+
+
+let value =
+document.getElementById("date").value;
+
+
+document.getElementById("showDate")
+.innerText =
+value;
+
+
+}
+
+
+
+
+// 항목 추가
+
+function addItem(){
+
+
+let name =
+document.getElementById("name").value;
+
+
+let price =
+Number(
+document.getElementById("price").value
+);
+
+
+
+if(name==="" || price===""){
+
+return;
+
+}
+
+
+
+
+let div =
+document.createElement("div");
+
+
+div.className="item";
+
+
+div.draggable=true;
+
+
+
+div.dataset.price =
+price;
+
+
+
+
+div.innerHTML=`
+
+<span>${name}</span>
+
+<span>
+${price.toLocaleString()}원
+</span>
+
+
+<button class="delete">
+
+삭제
+
+</button>
+
+`;
+
+
+
+
+
+// 삭제 버튼
+
+div.querySelector(".delete")
+.onclick=function(){
+
+
+total -= Number(div.dataset.price);
+
+
+div.remove();
+
+
+updateTotal();
+
+
+};
+
+
+
+
+
+// 드래그 시작
+
+div.addEventListener(
+"dragstart",
+()=>{
+
+div.style.opacity=0.5;
+
+}
+
+);
+
+
+
+div.addEventListener(
+"dragend",
+()=>{
+
+div.style.opacity=1;
+
+}
+
+);
+
+
+
+
+
+list.appendChild(div);
+
+
+
+total += price;
+
+
+updateTotal();
+
+
+
+document.getElementById("name").value="";
+
+document.getElementById("price").value="";
+
+
+
+}
+
+
+
+
+// 드래그 순서 변경
+
+
+list.addEventListener(
+"dragover",
+function(e){
+
+e.preventDefault();
+
+
+
+let dragging =
+document.querySelector(".item[style*='opacity']");
+
+
+let after =
+getAfterElement(
+list,
+e.clientY
+);
+
+
+
+if(after==null){
+
+list.appendChild(dragging);
+
+}
+
+else{
+
+list.insertBefore(
+dragging,
+after
+);
+
+
+}
+
+
+
+}
+
+);
+
+
+
+
+
+
+function getAfterElement(container,y){
+
+
+let elements =
+[
+...container.querySelectorAll(".item:not([style*='opacity'])")
+];
+
+
+
+return elements.reduce(
+(closest,child)=>{
+
+
+let box =
+child.getBoundingClientRect();
+
+
+let offset =
+y-box.top-box.height/2;
+
+
+
+if(
+offset<0 &&
+offset>closest.offset
+){
+
+return {
+
+offset:offset,
+
+element:child
+
+};
+
+}
+
+else{
+
+return closest;
+
+}
+
+
+},
+{
+
+offset:Number.NEGATIVE_INFINITY
+
+}
+
+).element;
+
+
+
+}
+
+
+
+
+
+function updateTotal(){
+
+
+document.getElementById("total")
+.innerText =
+total.toLocaleString()+"원";
+
+
+}
+
+
+
+
+
+
+// 이미지 저장
+
+function saveImage(){
+
+
+let buttons =
+document.querySelectorAll(".delete");
+
+
+// 저장 전에 삭제 버튼 숨김
+
+buttons.forEach(btn=>{
+
+    btn.style.display="none";
+
+});
+
+
+
+html2canvas(
+document.getElementById("receipt")
+)
+
+.then(canvas=>{
+
+
+let link =
+document.createElement("a");
+
+
+link.download =
+"영수증.png";
+
+
+link.href =
+canvas.toDataURL();
+
+
+link.click();
+
+
+
+// 다시 버튼 표시
+
+buttons.forEach(btn=>{
+
+    btn.style.display="block";
+
+});
+
+
+});
+
+
+}
+
+
+
+</script>
+
+
+
+</body>
+
+</html>
